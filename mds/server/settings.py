@@ -82,3 +82,19 @@ LOCALE_PATH = (os.path.join(BASE_DIR, "locale"),)
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = list(default_headers) + ["cache-control"]
+
+REST_FRAMEWORK = {
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "mds.authentication.StatelessJwtAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ),
+}
+
+JWT_AUTH = {
+    "JWT_SECRET_KEY": CONFIG.getstr("jwt.secret.key", "_DO_NOT_USE_IN_PRODUCTION_"),
+    # TODO
+    "JWT_PUBLIC_KEY": None,
+    "JWT_LEEWAY": 30,
+}
