@@ -10,7 +10,7 @@ from .server.settings import JWT_AUTH
 
 class JwtUser:
     """
-    See django.contrib.auth.models.AnonymousUser
+    Inspired by django.contrib.auth.models.AnonymousUser
     """
 
     id = None
@@ -22,8 +22,15 @@ class JwtUser:
     _groups = EmptyManager(Group)
     _user_permissions = EmptyManager(Permission)
 
-    def __init__(self, sub):
+    scopes = []
+
+    provider_id = None
+    """If provided, restrict access to data owned by given provider"""
+
+    def __init__(self, sub, scopes, provider_id):
         self.id = sub
+        self.scopes = scopes
+        self.provider_id = provider_id
 
     def __str__(self):
         return "JwtUser {}".format(self.id)
@@ -100,12 +107,20 @@ class StatelessJwtAuthentication(BaseAuthentication):
     def build_user(payload):
         """
         Returns a user from the JWT payload
+
+        Fields looked-for in the payload:
+            * sub (required): identifier for the owner of the token. Could be a human user, a provider's server, ...
+            * provider_id (optional): asked by https://github.com/CityOfLosAngeles/mobility-data-specification/blob/f3af2ca49eb5fe623b5f0b69533fefdee92d7f43/agency/README.md#authorization
+
         """
-        if not payload["sub"]:
+        if not payload["sub"] or not payload["scopes"]:
             msg = _("Invalid payload.")
             raise exceptions.AuthenticationFailed(msg)
 
-        return JwtUser(payload["sub"])
+        # See https://tools.ietf.org/html/rfc6749#section-3.3
+        scopes = payload["scopes"]
+
+        return JwtUser(payload["sub"], scopes, payload["provider_id"])
 
     @staticmethod
     def decode_jwt(encoded_jwt):
