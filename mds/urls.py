@@ -6,6 +6,7 @@ from django.urls import path
 from rest_framework import routers
 
 from . import views
+from .access_control import blacklist
 
 
 class PutCreateRouter(routers.DefaultRouter):
@@ -66,6 +67,7 @@ def ok_view(request):
 urlpatterns = [
     url(r"^", include(router.urls)),
     url(r"^schema/$", views.swagger),
+    url(r"^blacklists/", include(blacklist.urls)),
     path("admin/", admin.site.urls),
     path("selftest/ping/", ok_view),
 ]

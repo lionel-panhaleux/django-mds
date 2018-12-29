@@ -5,7 +5,9 @@ from django.utils.translation import ugettext as _
 from rest_framework import exceptions
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 
-from .server.settings import JWT_AUTH
+from mds.server.settings import JWT_AUTH
+from .jwt_decode import jwt_multi_decode
+# from ..blacklist.models import BlacklistedToken
 
 
 class JwtUser:
@@ -83,13 +85,29 @@ class JwtUser:
 
 
 class StatelessJwtAuthentication(BaseAuthentication):
+    public_keys = []
+    secret_keys = []
+
+    def __init__(self) -> None:
+
+        if JWT_AUTH["JWT_PUBLIC_KEYS"]:
+            delimiter = "-----END PUBLIC KEY-----"
+            self.public_keys = [
+                k + delimiter for k in JWT_AUTH["JWT_PUBLIC_KEYS"].split(delimiter) if k
+            ]
+
+        if JWT_AUTH["JWT_SECRET_KEYS"]:
+            self.secret_keys = [
+                k.strip() for k in JWT_AUTH["JWT_SECRET_KEYS"].split(" ") if k
+            ]
+
     def authenticate(self, request):
         encoded_jwt = self.extract_token(request)
         if encoded_jwt is None:
             return None
 
         try:
-            payload = self.decode_jwt(encoded_jwt)
+            payload = jwt_multi_decode(self.public_keys, self.secret_keys, encoded_jwt)
         except jwt.ExpiredSignature:
             msg = _("Signature has expired.")
             raise exceptions.AuthenticationFailed(msg)
@@ -110,31 +128,32 @@ class StatelessJwtAuthentication(BaseAuthentication):
 
         Fields looked-for in the payload:
             * sub (required): identifier for the owner of the token. Could be a human user, a provider's server, ...
-            * provider_id (optional): asked by https://github.com/CityOfLosAngeles/mobility-data-specification/blob/f3af2ca49eb5fe623b5f0b69533fefdee92d7f43/agency/README.md#authorization
-
+            * jti (required): identifier for the JWT (make it possible to blacklist the token)
+            * scopes (required): space-delimited permissions
+            * provider_id (optional, required for provider): asked by https://github.com/CityOfLosAngeles/mobility-data-specification/tree/dev/agency#authorization
         """
-        if not payload["sub"] or not payload["scopes"]:
-            msg = _("Invalid payload.")
-            raise exceptions.AuthenticationFailed(msg)
+        required_fields = {"sub", "jti", "scopes"}
+        missing_fields = required_fields - payload.keys()
+
+        if missing_fields:
+            msg = _("Invalid payload, missing fields: %(fields)s")
+            raise exceptions.AuthenticationFailed(
+                msg % {"fields": ", ".join(missing_fields)}
+            )
+
+        # Possible optimization: add (couple of minutes) cache on blacklist retrieval
+        # try:
+        #     BlacklistedToken.objects.get(pk=payload["jti"])
+        #     msg = _("Blacklisted token.")
+        #     raise exceptions.AuthenticationFailed(msg)
+        # except BlacklistedToken.DoesNotExist:
+        #     # We are good !
+        #     pass
 
         # See https://tools.ietf.org/html/rfc6749#section-3.3
         scopes = payload["scopes"]
 
         return JwtUser(payload["sub"], scopes, payload["provider_id"])
-
-    @staticmethod
-    def decode_jwt(encoded_jwt):
-        if JWT_AUTH["JWT_PUBLIC_KEY"]:
-            return jwt.decode(
-                encoded_jwt, JWT_AUTH["JWT_PUBLIC_KEY"], algorithms="RS256"
-            )
-
-        if JWT_AUTH["JWT_SECRET_KEY"]:
-            return jwt.decode(
-                encoded_jwt, JWT_AUTH["JWT_SECRET_KEY"], algorithms="HS256"
-            )
-
-        raise Exception("JWT authentication configuration is incomplete")
 
     @staticmethod
     def extract_token(request):

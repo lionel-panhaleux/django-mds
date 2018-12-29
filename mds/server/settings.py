@@ -84,17 +84,21 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = list(default_headers) + ["cache-control"]
 
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "mds.authentication.StatelessJwtAuthentication",
+        "mds.access_control.authentication.StatelessJwtAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
-    ),
+    )
 }
 
 JWT_AUTH = {
-    "JWT_SECRET_KEY": CONFIG.getstr("jwt.secret.key", "_DO_NOT_USE_IN_PRODUCTION_"),
-    # TODO
-    "JWT_PUBLIC_KEY": None,
-    "JWT_LEEWAY": 30,
+    # Space separated secret keys
+    "JWT_SECRET_KEYS": CONFIG.getstr("jwt.secret_keys", None),
+    # Concatenated pem public keys (-----BEGIN PUBLIC KEY-----)
+    "JWT_PUBLIC_KEYS": CONFIG.getstr("jwt.public_keys", None),
 }
+if not JWT_AUTH["JWT_SECRET_KEYS"] and not JWT_AUTH["JWT_PUBLIC_KEYS"]:
+    raise Exception(
+        "JWT authentication configuration is incomplete: neither secret nor public key found"
+    )
