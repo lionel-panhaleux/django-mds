@@ -2,8 +2,9 @@
 Django settings
 """
 import os
-from corsheaders.defaults import default_headers
+
 import getconf
+from corsheaders.defaults import default_headers
 
 CONFIG = getconf.ConfigGetter("mds")
 
@@ -86,7 +87,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + ["cache-control"]
 REST_FRAMEWORK = {
     # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "mds.access_control.authentication.StatelessJwtAuthentication",
+        "mds.access_control.authentication.stateless_jwt.StatelessJwtAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     )

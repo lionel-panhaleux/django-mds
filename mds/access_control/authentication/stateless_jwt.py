@@ -1,5 +1,6 @@
+from typing import Set, Optional
+
 import jwt
-from django.contrib.auth.models import EmptyManager, Group, Permission
 from django.utils.encoding import smart_text
 from django.utils.translation import ugettext as _
 from rest_framework import exceptions
@@ -7,7 +8,7 @@ from rest_framework.authentication import BaseAuthentication, get_authorization_
 
 from mds.server.settings import JWT_AUTH
 from .jwt_decode import jwt_multi_decode
-# from ..blacklist.models import BlacklistedToken
+from ..blacklist.models import BlacklistedToken
 
 
 class JwtUser:
@@ -15,62 +16,18 @@ class JwtUser:
     Inspired by django.contrib.auth.models.AnonymousUser
     """
 
-    id = None
-    pk = None
-    username = ""
-    is_staff = False
-    is_active = False
-    is_superuser = False
-    _groups = EmptyManager(Group)
-    _user_permissions = EmptyManager(Permission)
-
-    scopes = []
-
-    provider_id = None
+    _id: str
+    _scopes: Set[str] = set()
+    _provider_id: Optional[str] = None
     """If provided, restrict access to data owned by given provider"""
 
     def __init__(self, sub, scopes, provider_id):
-        self.id = sub
-        self.scopes = scopes
-        self.provider_id = provider_id
+        self._id = sub
+        self._scopes = scopes
+        self._provider_id = provider_id
 
     def __str__(self):
-        return "JwtUser {}".format(self.id)
-
-    def save(self):
-        raise NotImplementedError("Not provided for JwtUser.")
-
-    def delete(self):
-        raise NotImplementedError("Not provided for JwtUser.")
-
-    def set_password(self, raw_password):
-        raise NotImplementedError("Not provided for JwtUser.")
-
-    def check_password(self, raw_password):
-        raise NotImplementedError("Not provided for JwtUser.")
-
-    @property
-    def groups(self):
-        return self._groups
-
-    @property
-    def user_permissions(self):
-        return self._user_permissions
-
-    def get_group_permissions(self, obj=None):
-        return set()
-
-    def get_all_permissions(self, obj=None):
-        return False
-
-    def has_perm(self, perm, obj=None):
-        return False
-
-    def has_perms(self, perm_list, obj=None):
-        return False
-
-    def has_module_perms(self, module):
-        return False
+        return "JwtUser {}".format(self._id)
 
     @property
     def is_anonymous(self):
@@ -80,8 +37,17 @@ class JwtUser:
     def is_authenticated(self):
         return True
 
-    def get_username(self):
-        return self.username
+    @property
+    def is_staff(self):
+        return "admin" in self._scopes
+
+    @property
+    def scopes(self):
+        return self._scopes
+
+    @property
+    def provider_id(self):
+        return self._provider_id
 
 
 class StatelessJwtAuthentication(BaseAuthentication):
@@ -142,18 +108,18 @@ class StatelessJwtAuthentication(BaseAuthentication):
             )
 
         # Possible optimization: add (couple of minutes) cache on blacklist retrieval
-        # try:
-        #     BlacklistedToken.objects.get(pk=payload["jti"])
-        #     msg = _("Blacklisted token.")
-        #     raise exceptions.AuthenticationFailed(msg)
-        # except BlacklistedToken.DoesNotExist:
-        #     # We are good !
-        #     pass
+        try:
+            BlacklistedToken.objects.get(pk=payload["jti"])
+            msg = _("Blacklisted token.")
+            raise exceptions.AuthenticationFailed(msg)
+        except BlacklistedToken.DoesNotExist:
+            # We are good !
+            pass
 
         # See https://tools.ietf.org/html/rfc6749#section-3.3
-        scopes = payload["scopes"]
+        scopes = set(payload["scopes"].split(" "))
 
-        return JwtUser(payload["sub"], scopes, payload["provider_id"])
+        return JwtUser(payload["sub"], scopes, payload.get("provider_id", None))
 
     @staticmethod
     def extract_token(request):
