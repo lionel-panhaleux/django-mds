@@ -77,10 +77,13 @@ def build_user(payload: Dict) -> RemoteUser:
     Returns a user from the JWT payload
 
     Fields looked-for in the payload:
-        * sub (required): identifier for the owner of the token. Could be a human user, a provider's server, ...
-        * jti (required): identifier for the JWT (make it possible to blacklist the token)
+        * sub (required): identifier for the owner of the token. Could be a human user,
+          a provider's server, ...
+        * jti (required): identifier for the JWT (make it possible to blacklist
+          the token)
         * scope (required): space-delimited permissions
-        * provider_id (optional, required for provider): asked for by https://github.com/CityOfLosAngeles/mobility-data-specification/tree/dev/agency#authorization
+        * provider_id (optional, required for provider): asked for by
+          https://github.com/CityOfLosAngeles/mobility-data-specification/tree/dev/agency#authorization
     """
     required_fields = {"sub", "jti", "scope"}
     missing_fields = required_fields - payload.keys()

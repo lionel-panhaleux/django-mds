@@ -113,7 +113,8 @@ for i in itertools.count(start=1):
     else:
         break
 
-    # Optional, recommended if handling long-lived access tokens (not a good idea when using JWT)
+    # Optional, recommended if handling long-lived access tokens
+    # (not a good idea when using JWT)
     if "introspect_url" in section:
         auth_mean.introspect_url = CONFIG.getstr(section + ".introspect_url", None)
 

@@ -6,7 +6,8 @@ from mds.access_control.authenticate import RemoteUser
 def require_scopes(*required_roles):
     class ScopePermission(BasePermission):
         """
-        Allows access only to authenticated users with a specific scope (or admin rights)
+        Allows access only to authenticated users with a specific scope
+        (or admin rights)
         """
 
         _required_roles = set(required_roles)

@@ -20,12 +20,18 @@ def jwt_multi_decode(auth_means: List[BaseAuthMean], encoded_jwt: str) -> (Dict,
     for auth_mean in auth_means:
         if alg == "RS256" and isinstance(auth_mean, PublicKeyJwtBaseAuthMean):
             try:
-                return jwt.decode(encoded_jwt, auth_mean.public_key, algorithms="RS256"), auth_mean.introspect_url
+                return (
+                    jwt.decode(encoded_jwt, auth_mean.public_key, algorithms="RS256"),
+                    auth_mean.introspect_url,
+                )
             except jwt.InvalidSignatureError as e:
                 exception_holder = e
         elif isinstance(auth_mean, SecretKeyJwtBaseAuthMean):
             try:
-                return jwt.decode(encoded_jwt, auth_mean.secret_key, algorithms="HS256"), auth_mean.introspect_url
+                return (
+                    jwt.decode(encoded_jwt, auth_mean.secret_key, algorithms="HS256"),
+                    auth_mean.introspect_url,
+                )
             except jwt.InvalidSignatureError as e:
                 exception_holder = e
 

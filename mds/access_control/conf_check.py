@@ -5,7 +5,8 @@ def conf_check_middleware(get_response):
 
     if not AUTH_MEANS:
         raise Exception(
-            "JWT authentication configuration is incomplete: neither secret nor public key found"
+            "JWT authentication configuration is incomplete: "
+            + "neither secret nor public key found"
         )
 
     def middleware(request):

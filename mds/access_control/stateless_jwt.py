@@ -28,4 +28,4 @@ class StatelessJwtAuthentication(BaseAuthentication):
         if not auth.lower().startswith(auth_header_prefix):
             return None
 
-        return auth[len(auth_header_prefix):]
+        return auth[len(auth_header_prefix) :]
