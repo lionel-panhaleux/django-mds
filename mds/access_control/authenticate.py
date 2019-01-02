@@ -6,6 +6,7 @@ from rest_framework import exceptions
 
 from .auth_means import BaseAuthMean
 from .jwt_decode import jwt_multi_decode
+from .scopes import SCOPE_ADMIN
 
 
 class RemoteUser:
@@ -36,7 +37,7 @@ class RemoteUser:
 
     @property
     def is_staff(self):
-        return "admin" in self._scopes
+        return SCOPE_ADMIN in self._scopes
 
     @property
     def scopes(self):
