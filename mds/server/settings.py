@@ -44,6 +44,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "mds.access_control.conf_check.conf_check_middleware",
 ]
 ROOT_URLCONF = "mds.urls"
 TEMPLATES = [
@@ -117,8 +118,3 @@ for i in itertools.count(start=1):
         auth_mean.introspect_url = CONFIG.getstr(section + ".introspect_url", None)
 
     AUTH_MEANS.append(auth_mean)
-
-if not AUTH_MEANS:
-    raise Exception(
-        "JWT authentication configuration is incomplete: neither secret nor public key found"
-    )
