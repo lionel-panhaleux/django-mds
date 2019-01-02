@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 
-from ..authentication.stateless_jwt import JwtUser
+from mds.access_control.authenticate import RemoteUser
 
 
 def require_scopes(*required_roles):
@@ -18,7 +18,7 @@ def require_scopes(*required_roles):
             if request.user.is_staff:
                 return True
 
-            if isinstance(request.user, JwtUser):
+            if isinstance(request.user, RemoteUser):
                 return self._required_roles.issubset(request.user.scopes)
 
             return False

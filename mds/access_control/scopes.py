@@ -1,0 +1,1 @@
+SCOPE_VEHICLE = "vehicle"

@@ -1,1 +1,0 @@
-SCOPE_ADMIN = "admin"

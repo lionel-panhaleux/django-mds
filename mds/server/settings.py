@@ -1,10 +1,16 @@
 """
 Django settings
 """
+import itertools
 import os
 
 import getconf
 from corsheaders.defaults import default_headers
+
+from mds.access_control.auth_means import (
+    SecretKeyJwtBaseAuthMean,
+    PublicKeyJwtBaseAuthMean,
+)
 
 CONFIG = getconf.ConfigGetter("mds")
 
@@ -87,19 +93,32 @@ CORS_ALLOW_HEADERS = list(default_headers) + ["cache-control"]
 REST_FRAMEWORK = {
     # "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "mds.access_control.authentication.stateless_jwt.StatelessJwtAuthentication",
+        "mds.access_control.stateless_jwt.StatelessJwtAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
     )
 }
 
-JWT_AUTH = {
-    # Space separated secret keys
-    "JWT_SECRET_KEYS": CONFIG.getstr("jwt.secret_keys", None),
-    # Concatenated pem public keys (-----BEGIN PUBLIC KEY-----)
-    "JWT_PUBLIC_KEYS": CONFIG.getstr("jwt.public_keys", None),
-}
-if not JWT_AUTH["JWT_SECRET_KEYS"] and not JWT_AUTH["JWT_PUBLIC_KEYS"]:
+AUTH_MEANS = []
+for i in itertools.count(start=1):
+    section = "auth" + (" " + str(i) if i > 1 else "")
+
+    auth_mean = None
+    if CONFIG.getstr(section + ".secret_key"):
+        auth_mean = SecretKeyJwtBaseAuthMean(CONFIG.getstr(section + ".secret_key"))
+    elif CONFIG.getstr(section + ".public_key"):
+        # PEM public keys (-----BEGIN PUBLIC KEY-----)
+        auth_mean = PublicKeyJwtBaseAuthMean(CONFIG.getstr(section + ".public_key"))
+    else:
+        break
+
+    # Optional, recommended if handling long-lived access tokens (not a good idea when using JWT)
+    if "introspect_url" in section:
+        auth_mean.introspect_url = CONFIG.getstr(section + ".introspect_url", None)
+
+    AUTH_MEANS.append(auth_mean)
+
+if not AUTH_MEANS:
     raise Exception(
         "JWT authentication configuration is incomplete: neither secret nor public key found"
     )

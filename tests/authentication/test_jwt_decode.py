@@ -4,17 +4,21 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from mds.access_control.authentication.jwt_decode import jwt_multi_decode
+from mds.access_control.jwt_decode import jwt_multi_decode
+from mds.access_control.auth_means import (
+    SecretKeyJwtBaseAuthMean,
+    PublicKeyJwtBaseAuthMean,
+)
 
 
 def test_jwt_multi_decode_fails_if_no_key_given():
     with pytest.raises(AssertionError):
-        jwt_multi_decode([], [], "")
+        jwt_multi_decode([], "")
 
 
 def test_jwt_multi_decode_secret_key():
     encoded_jwt = jwt.encode({"jti": "123"}, "MY-SECRET")
-    decoded_jwt = jwt_multi_decode([], ["MY-SECRET"], encoded_jwt)
+    decoded_jwt = jwt_multi_decode([SecretKeyJwtBaseAuthMean("MY-SECRET")], encoded_jwt)
     assert decoded_jwt["jti"] == "123"
 
 
@@ -38,7 +42,7 @@ def test_jwt_multi_decode_public_key():
     (public_key, private_key) = gen_keys()
 
     encoded_jwt = jwt.encode({"jti": "123"}, private_key, algorithm="RS256")
-    decoded_jwt = jwt_multi_decode([public_key], [], encoded_jwt)
+    decoded_jwt = jwt_multi_decode([PublicKeyJwtBaseAuthMean(public_key)], encoded_jwt)
     assert decoded_jwt["jti"] == "123"
 
 
@@ -48,6 +52,11 @@ def test_jwt_multiple_keys():
 
     encoded_jwt = jwt.encode({"jti": "123"}, private_key_2, algorithm="RS256")
     decoded_jwt = jwt_multi_decode(
-        [public_key_1, public_key_2], ["MY-USELESS-SECRET"], encoded_jwt
+        [
+            PublicKeyJwtBaseAuthMean(public_key_1),
+            PublicKeyJwtBaseAuthMean(public_key_2),
+            SecretKeyJwtBaseAuthMean("MY-USELESS-SECRET"),
+        ],
+        encoded_jwt,
     )
     assert decoded_jwt["jti"] == "123"
