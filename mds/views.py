@@ -13,7 +13,6 @@ from rest_framework.compat import coreapi, coreschema
 from rest_framework.response import Response
 from rest_framework.schemas import inspectors
 
-from mds.access_control.authenticate import RemoteUser
 from mds.access_control.permissions import require_scopes
 from mds.access_control.scopes import SCOPE_VEHICLE
 from . import models
@@ -146,7 +145,8 @@ class DeviceViewSet(
         ).select_related("provider")
 
         user = self.request.user
-        if isinstance(user, RemoteUser) and user.provider_id:
+        provider_id = getattr(self.request.user, "provider_id", None)
+        if provider_id:
             queryset = queryset.filter(provider_id=user.provider_id)
 
         return queryset

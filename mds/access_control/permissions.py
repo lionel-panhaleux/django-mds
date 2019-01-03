@@ -1,7 +1,5 @@
 from rest_framework.permissions import BasePermission
 
-from mds.access_control.authenticate import RemoteUser
-
 
 def require_scopes(*required_roles):
     class ScopePermission(BasePermission):
@@ -19,10 +17,7 @@ def require_scopes(*required_roles):
             if request.user.is_staff:
                 return True
 
-            if isinstance(request.user, RemoteUser):
-               scopes = getattr(request.user, "scopes", {})
-               return self._required_roles.issubset(scopes)
-
-            return False
+            scopes = getattr(request.user, "scopes", {})
+            return self._required_roles.issubset(scopes)
 
     return ScopePermission
