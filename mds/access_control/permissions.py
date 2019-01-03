@@ -20,7 +20,8 @@ def require_scopes(*required_roles):
                 return True
 
             if isinstance(request.user, RemoteUser):
-                return self._required_roles.issubset(request.user.scopes)
+               scopes = getattr(request.user, "scopes", {})
+               return self._required_roles.issubset(scopes)
 
             return False
 
