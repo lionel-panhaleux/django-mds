@@ -1,7 +1,7 @@
+from django.conf import settings
 from django.utils.encoding import smart_text
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 
-from django.conf import settings
 from .authenticate import authenticate
 
 
@@ -10,6 +10,12 @@ class StatelessJwtAuthentication(BaseAuthentication):
         encoded_jwt = self.extract_token(request)
         if encoded_jwt is None:
             return None
+
+        if not settings.AUTH_MEANS:
+            raise Exception(
+                "JWT authentication configuration is incomplete: "
+                + "neither secret nor public key found"
+            )
 
         user = authenticate(settings.AUTH_MEANS, encoded_jwt)
 

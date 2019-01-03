@@ -44,7 +44,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "mds.access_control.conf_check.conf_check_middleware",
 ]
 ROOT_URLCONF = "mds.urls"
 TEMPLATES = [
