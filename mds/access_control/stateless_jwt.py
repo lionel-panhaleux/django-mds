@@ -1,7 +1,7 @@
 from django.utils.encoding import smart_text
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 
-from mds.server.settings import AUTH_MEANS
+from django.conf import settings
 from .authenticate import authenticate
 
 
@@ -11,7 +11,7 @@ class StatelessJwtAuthentication(BaseAuthentication):
         if encoded_jwt is None:
             return None
 
-        user = authenticate(AUTH_MEANS, encoded_jwt)
+        user = authenticate(settings.AUTH_MEANS, encoded_jwt)
 
         return user, None
 

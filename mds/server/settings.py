@@ -102,7 +102,7 @@ REST_FRAMEWORK = {
 
 AUTH_MEANS = []
 for i in itertools.count(start=1):
-    section = "auth" + (" " + str(i) if i > 1 else "")
+    section = "auth" + ("_" + str(i) if i > 1 else "")
 
     auth_mean = None
     if CONFIG.getstr(section + ".secret_key"):

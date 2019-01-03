@@ -1,9 +1,9 @@
-from mds.server.settings import AUTH_MEANS
+from django.conf import settings
 
 
 def conf_check_middleware(get_response):
 
-    if not AUTH_MEANS:
+    if not settings.AUTH_MEANS:
         raise Exception(
             "JWT authentication configuration is incomplete: "
             + "neither secret nor public key found"

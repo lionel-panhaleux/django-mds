@@ -8,6 +8,8 @@ from mds import factories
 from mds.access_control.scopes import SCOPE_VEHICLE
 from .auth_helper import auth_header
 
+from mds import admin  # noqa: F401
+
 
 def format_timezone(timezone):
     return timezone.strftime("%Y-%m-%dT%H:%M:%S.%fZ")

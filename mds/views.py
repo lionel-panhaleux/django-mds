@@ -5,7 +5,7 @@ import warnings
 import yaml
 from django.db.models import OuterRef, Subquery, Prefetch
 from django.shortcuts import render
-from rest_framework import exceptions, permissions
+from rest_framework import exceptions
 from rest_framework import mixins
 from rest_framework import serializers as drf_serializers
 from rest_framework import viewsets
@@ -33,7 +33,7 @@ class MultiSerializerViewSet(viewsets.GenericViewSet):
 class CustomViewSchema(inspectors.AutoSchema):
     """
     Overrides `get_serializer_fields()`
-    to accomodate our :class:`MultiSerializerViewSet`
+    to accommodate our :class:`MultiSerializerViewSet`
     """
 
     def get_serializer_fields(self, path, method):
@@ -119,7 +119,7 @@ class DeviceViewSet(
     UpdateOnlyModelMixin,
     MultiSerializerViewSet,
 ):
-    permission_classes = (permissions.IsAuthenticated, require_scopes(SCOPE_VEHICLE))
+    permission_classes = (require_scopes(SCOPE_VEHICLE),)
     lookup_field = "id"
     serializers_map = {
         "list": serializers.Device,
