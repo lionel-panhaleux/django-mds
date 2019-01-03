@@ -99,6 +99,8 @@ REST_FRAMEWORK = {
     )
 }
 
+# AUTH_USER_MODEL = None # TODO later
+
 AUTH_MEANS = []
 for i in itertools.count(start=1):
     section = "auth" + ("_" + str(i) if i > 1 else "")
