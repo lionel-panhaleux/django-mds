@@ -4,7 +4,7 @@ Changelog
 0.5.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Delete useless areas and polygons creation/deletion dates
 
 
 0.5.3 (2019-03-19)

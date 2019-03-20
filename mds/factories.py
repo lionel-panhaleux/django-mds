@@ -597,8 +597,6 @@ class Area(factory.DjangoModelFactory):
     class Meta:
         model = models.Area
 
-    creation_date = datetime.datetime(2018, 8, 1, tzinfo=pytz.utc)
-    deletion_date = None
     label = ""
 
     @factory.post_generation
@@ -630,8 +628,6 @@ class Polygon(factory.DjangoModelFactory):
     class Meta:
         model = models.Polygon
 
-    creation_date = datetime.datetime(2018, 8, 1, tzinfo=pytz.utc)
-    deletion_date = None
     label = ""
     geom = district10
     properties = {}
