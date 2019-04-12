@@ -3,8 +3,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from . import models, enums, export as export_excel
-from mds.apis.prv_api import vehicles
-
+from mds.apis.prv_api import vehicles, event_records
 import pytz
 
 from uuid import UUID
@@ -142,6 +141,7 @@ class EventRecordAdmin(ExportAdmin, admin.ModelAdmin):
     list_filter = ["device__provider", "event_type"]
     list_select_related = ("device__provider",)
     search_fields = ["device__id", "device__identification_number"]
+    actions = ['export']
 
     def get_search_results(self, request, queryset, search_term):
         if not search_term:
@@ -160,12 +160,16 @@ class EventRecordAdmin(ExportAdmin, admin.ModelAdmin):
     export.short_description = "Export"
     export.list_required = False
 
-    export_serializer = None
+    export_serializer = event_records.EventRecordSerializer
     export_title = "EventRecords"
     export_columns = [
         # Headers taken from the frontend and not translated
-        ("timestamp", "Timestamp", None),
-        ("provider", "Provider", None),
+        ("timestamp", "Timestamp ({tz})", parse_datetime),
+        ("provider_name", "Provider", None),
+        ("source", "Source", None),
+        ("device_id", "Device UUID", None),
+        ("device_vin", "Device VIN", None),
+        ("event_type", "Event", None),
     ]
 
 
