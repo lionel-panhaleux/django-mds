@@ -87,7 +87,7 @@ class DeviceSerializer(serializers.ModelSerializer):
             "last_telemetry_date",
             "battery",
         )
-
+        
 
 class RetrieveDeviceSerializer(DeviceSerializer):
     areas = serializers.SerializerMethodField()

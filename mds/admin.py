@@ -1,5 +1,11 @@
 from django.contrib import admin
-from . import models
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+
+from . import models, enums, export as export_excel
+from mds.apis.prv_api import vehicles
+
+import pytz
 
 from uuid import UUID
 
@@ -12,27 +18,23 @@ def is_uuid(uuid_string, version=4):
     return True
 
 
-@admin.register(models.Provider)
-class ProviderAdmin(admin.ModelAdmin):
-    list_display = ["id", "name"]
-    ordering = ["name"]
+class ExportAdmin(admin.ModelAdmin): #class needed to overload a few methods
+    def export(self, request, queryset): #global action
+        def get_default_export_columns(self):
+            return [(field, field, None) for field in self.list_display]
 
+        tz = request.GET.get("tz", timezone.get_default_timezone_name())
+        tz_object = pytz.timezone(tz) # Use a shorter alias: Europe/Paris => CET
+        tz = timezone.now().astimezone(tz_object).strftime("%Z")
+        title = getattr(self, 'export_title', 'Export')
+        export_columns = getattr(self, 'export_columns', get_default_export_columns(self))
+        serializer = getattr(self, 'export_serializer', None)
+        headers = [col[1].format(tz=tz) for col in export_columns]
+        template = export_excel.excel_template(headers=headers)
 
-def export(modelAdmin, request, queryset):
-    import pdb;
-    pdb.set_trace()
-export.short_description = "Export"
-export.list_required = False
-
-admin.site.add_action(export, 'Export')
-
-@admin.register(models.Device)
-class DeviceAdmin(admin.ModelAdmin):
-    list_display = ["id", "provider_name", "identification_number", "category"]
-    list_filter = ["provider", "model", "category"]
-    search_fields = ["id", "identification_number"]
-    list_select_related = ("provider",)
-    actions = [export]
+        return export_excel.to_streaming_response(
+            title, export_columns, serializer, queryset, template, tz_object, with_time=False, batch_size=500
+        )
 
     def get_changelist_instance(self, request):
         """
@@ -87,14 +89,51 @@ class DeviceAdmin(admin.ModelAdmin):
                 return self.response_action(request, queryset=self.get_filtered_queryset(request))
 
         return admin.ModelAdmin.changelist_view(self, request, extra_context)
-        
-    def get_queryset(self, request):
-        return super(DeviceAdmin, self).get_queryset(request)
+
+@admin.register(models.Provider)
+class ProviderAdmin(admin.ModelAdmin):
+    list_display = ["id", "name"]
+    ordering = ["name"]
+
+@admin.register(models.Device)
+class DeviceAdmin(ExportAdmin, admin.ModelAdmin):
+    list_display = ["id", "provider_name", "identification_number", "category"]
+    list_filter = ["provider", "category"]
+    search_fields = ["id", "identification_number"]
+    list_select_related = ("provider",)
+    actions = ['export']
 
     def provider_name(self, obj):
         return obj.provider.name
-
     provider_name.short_description = "Provider"
+
+    def export(self, request, queryset):
+        return ExportAdmin.export(self, request, queryset)
+    export.short_description = "Export"
+    export.list_required = False
+
+    export_serializer = vehicles.DeviceSerializer
+    export_title = "Devices"
+    export_columns = [
+        # Headers taken from the frontend and not translated
+        ("id", "Vehicle ID", None),
+        ("identification_number", "VIN", None),
+        ("provider_name", "Provider", None),
+        (
+            "category",
+            "Vehicle type",
+            lambda v: getattr(enums.DEVICE_CATEGORY, v).value,
+        ),
+        (
+            "status",
+            "Status",
+            lambda v: getattr(enums.DEVICE_STATUS, v).value,
+        ),
+        ("registration_date", "Registration date ({tz})", parse_datetime),
+        ("last_telemetry_date", "Last telemetry date ({tz})", parse_datetime),
+        ("battery", "Energy level", lambda v: round(v * 10) * 10),
+        ("battery", "Energy range", lambda v: round(v * 200)),  # XXX
+    ]
 
 
 @admin.register(models.EventRecord)
