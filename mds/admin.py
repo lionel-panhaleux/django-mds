@@ -28,7 +28,7 @@ class ExportAdmin(admin.ModelAdmin): #class needed to overload a few methods
         tz = timezone.now().astimezone(tz_object).strftime("%Z")
         title = getattr(self, 'export_title', 'Export')
         export_columns = getattr(self, 'export_columns', get_default_export_columns(self))
-        serializer = getattr(self, 'export_serializer', None)
+        serializer = getattr(self, 'export_serializer', lambda x: x)
         headers = [col[1].format(tz=tz) for col in export_columns]
         template = export_excel.excel_template(headers=headers)
 
@@ -137,7 +137,7 @@ class DeviceAdmin(ExportAdmin, admin.ModelAdmin):
 
 
 @admin.register(models.EventRecord)
-class EventRecordAdmin(admin.ModelAdmin):
+class EventRecordAdmin(ExportAdmin, admin.ModelAdmin):
     list_display = ["timestamp", "provider", "device_id", "event_type"]
     list_filter = ["device__provider", "event_type"]
     list_select_related = ("device__provider",)
@@ -154,6 +154,19 @@ class EventRecordAdmin(admin.ModelAdmin):
 
     def device_id(self, obj):
         return obj.device.id
+    
+    def export(self, request, queryset):
+        return ExportAdmin.export(self, request, queryset)
+    export.short_description = "Export"
+    export.list_required = False
+
+    export_serializer = None
+    export_title = "EventRecords"
+    export_columns = [
+        # Headers taken from the frontend and not translated
+        ("timestamp", "Timestamp", None),
+        ("provider", "Provider", None),
+    ]
 
 
 # to use when searching for devices in get_search_results as a relationship to self.model
