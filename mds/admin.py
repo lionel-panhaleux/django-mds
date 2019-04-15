@@ -15,7 +15,6 @@ class DeviceAdmin(admin.ModelAdmin):
     list_filter = ["provider", "category"]
     search_fields = ["id", "identification_number"]
     list_select_related = ["provider"]
-    actions = ["export"]
 
     def provider_name(self, obj):
         return obj.provider.name
@@ -29,7 +28,6 @@ class EventRecordAdmin(admin.ModelAdmin):
     list_filter = ["device__provider", "event_type"]
     list_select_related = ["device__provider"]
     search_fields = ["device__id", "device__identification_number"]
-    actions = ["export"]
 
     def get_search_results(self, request, queryset, search_term):
         if not search_term:
