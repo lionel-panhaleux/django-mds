@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . import models, admin_overload, admin_export
+from . import models, admin_overload
 
 
 @admin.register(models.Provider)
@@ -9,7 +9,7 @@ class ProviderAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.Device)
-class DeviceAdmin(admin_export.ExportDeviceAdmin, admin.ModelAdmin):
+class DeviceAdmin(admin.ModelAdmin):
     list_display = ["id", "provider_name", "identification_number", "category"]
     list_filter = ["provider", "category"]
     search_fields = ["id", "identification_number"]
@@ -23,7 +23,7 @@ class DeviceAdmin(admin_export.ExportDeviceAdmin, admin.ModelAdmin):
 
 
 @admin.register(models.EventRecord)
-class EventRecordAdmin(admin_export.ExportEventRecordAdmin, admin.ModelAdmin):
+class EventRecordAdmin(admin.ModelAdmin):
     list_display = ["timestamp", "provider", "device_id", "event_type"]
     list_filter = ["device__provider", "event_type"]
     list_select_related = ("device__provider",)
