@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from . import models, admin_overload
 
 
@@ -13,7 +14,7 @@ class DeviceAdmin(admin.ModelAdmin):
     list_display = ["id", "provider_name", "identification_number", "category"]
     list_filter = ["provider", "category"]
     search_fields = ["id", "identification_number"]
-    list_select_related = ("provider",)
+    list_select_related = ["provider"]
     actions = ["export"]
 
     def provider_name(self, obj):
@@ -26,7 +27,7 @@ class DeviceAdmin(admin.ModelAdmin):
 class EventRecordAdmin(admin.ModelAdmin):
     list_display = ["timestamp", "provider", "device_id", "event_type"]
     list_filter = ["device__provider", "event_type"]
-    list_select_related = ("device__provider",)
+    list_select_related = ["device__provider"]
     search_fields = ["device__id", "device__identification_number"]
     actions = ["export"]
 
