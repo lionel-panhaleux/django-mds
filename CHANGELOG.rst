@@ -5,6 +5,7 @@ Changelog
 -------------------
 
 - Delete creation_date and deletion_date fields on Area and Polygon
+- Add possibility to do django admin actions without selecting items (for future export action)
 
 
 0.5.13 (2019-04-12)
