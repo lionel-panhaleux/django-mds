@@ -1,16 +1,12 @@
 from django.contrib import admin
-from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+from . import models, admin_overload, admin_export
 
-from . import models, enums, export as export_excel, admin_overload, admin_export
-import pytz
-
-from uuid import UUID
 
 @admin.register(models.Provider)
 class ProviderAdmin(admin.ModelAdmin):
     list_display = ["id", "name"]
     ordering = ["name"]
+
 
 @admin.register(models.Device)
 class DeviceAdmin(admin_export.ExportDeviceAdmin, admin.ModelAdmin):
@@ -18,11 +14,13 @@ class DeviceAdmin(admin_export.ExportDeviceAdmin, admin.ModelAdmin):
     list_filter = ["provider", "category"]
     search_fields = ["id", "identification_number"]
     list_select_related = ("provider",)
-    actions = ['export']
+    actions = ["export"]
 
     def provider_name(self, obj):
         return obj.provider.name
+
     provider_name.short_description = "Provider"
+
 
 @admin.register(models.EventRecord)
 class EventRecordAdmin(admin_export.ExportEventRecordAdmin, admin.ModelAdmin):
@@ -30,12 +28,14 @@ class EventRecordAdmin(admin_export.ExportEventRecordAdmin, admin.ModelAdmin):
     list_filter = ["device__provider", "event_type"]
     list_select_related = ("device__provider",)
     search_fields = ["device__id", "device__identification_number"]
-    actions = ['export']
+    actions = ["export"]
 
     def get_search_results(self, request, queryset, search_term):
         if not search_term:
             return super().get_search_results(request, queryset, search_term)
-        custom_queryset = admin_overload.get_devices_queryset_search_results(self, search_term)
+        custom_queryset = admin_overload.get_devices_queryset_search_results(
+            self, search_term
+        )
         return super().get_search_results(request, custom_queryset, search_term)
 
     def provider(self, obj):

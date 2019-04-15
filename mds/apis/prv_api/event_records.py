@@ -7,15 +7,16 @@ from mds.access_control.scopes import SCOPE_PRV_API
 
 
 class EventRecordSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(
-        required=True, help_text="ID of the event"
-    )
+    id = serializers.IntegerField(required=True, help_text="ID of the event")
     timestamp = serializers.DateTimeField(help_text="Timestamp")
     provider_name = serializers.CharField(
-        source="device.provider.name", help_text="Name of the service provider of the device"
-    ) 
+        source="device.provider.name",
+        help_text="Name of the service provider of the device",
+    )
     device_id = serializers.CharField(help_text="UUID of the device concerned")
-    device_vin = serializers.CharField(source="device.identification_number", help_text="VIN of the device concerned")
+    device_vin = serializers.CharField(
+        source="device.identification_number", help_text="VIN of the device concerned"
+    )
     event_type = serializers.CharField(help_text="What the event is about")
     source = serializers.CharField(help_text="whether it is from agency or provider")
 
@@ -28,7 +29,7 @@ class EventRecordSerializer(serializers.ModelSerializer):
             "device_id",
             "device_vin",
             "event_type",
-            "source"
+            "source",
         )
 
 

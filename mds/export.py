@@ -13,8 +13,15 @@ from django.utils import timezone
 
 
 def to_streaming_response(
-    title, export_columns, serializer, queryset, template, tz_object, with_time=False, batch_size=500
-    ):
+    title,
+    export_columns,
+    serializer,
+    queryset,
+    template,
+    tz_object,
+    with_time=False,
+    batch_size=500,
+):
     """
     title: str, the base of the filename (appended with date (and time if with_time))
     export_columns: list of tuples (field_of_serializer, excel_header, function_to_transform_value | None)
@@ -30,16 +37,27 @@ def to_streaming_response(
         export_columns, serializer, queryset, tz_object, template, batch_size=batch_size
     )
 
-    openxml_mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    openxml_mimetype = (
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
 
     response = http.StreamingHttpResponse(stream, content_type=openxml_mimetype)
     excel._format_response(response, title, with_time)
     return response
 
+
 def stream_queryset_as_xlsx(
-        export_columns, serializer, qs, tz_object, xlsx_template=None, batch_size=500, encoding="utf-8"
-    ):
-    batches = serialize_queryset_by_batch(export_columns, serializer, qs, tz_object, batch_size=batch_size)
+    export_columns,
+    serializer,
+    qs,
+    tz_object,
+    xlsx_template=None,
+    batch_size=500,
+    encoding="utf-8",
+):
+    batches = serialize_queryset_by_batch(
+        export_columns, serializer, qs, tz_object, batch_size=batch_size
+    )
     try:
         zip_template = zipfile.ZipFile(xlsx_template, mode="r")
     except (ValueError, AttributeError):
@@ -66,6 +84,7 @@ def stream_queryset_as_xlsx(
     )
     return zipped_stream
 
+
 def serialize_queryset_by_batch(export_columns, serializer, qs, tz_object, batch_size):
     for batch in grouper(qs, batch_size):
         results = serializer(batch, many=True).data
@@ -83,6 +102,7 @@ def serialize_queryset_by_batch(export_columns, serializer, qs, tz_object, batch
                 row.append(value)
             rows.append(row)
         yield rows
+
 
 def excel_template(headers):
     """
