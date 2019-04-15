@@ -9,6 +9,9 @@ import pytz
 
 class BaseExportAdmin(IncludeNoSelectAction):
     def export(self, request, queryset):
+        # 20k = a bit less than 1.5 GiB
+        EXPORT_LIMIT = 20000
+        queryset = queryset[:EXPORT_LIMIT]
         def get_default_export_columns(self):
             return [(field, field, None) for field in self.list_display]
 
