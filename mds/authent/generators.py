@@ -6,7 +6,7 @@ from django.utils import timezone
 import jwt
 
 from . import models
-from . import settings
+from django.conf import settings
 
 
 AuthMean = namedtuple("AuthMean", ("key", "algorithm"))

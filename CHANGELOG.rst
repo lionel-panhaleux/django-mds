@@ -4,7 +4,7 @@ Changelog
 0.5.18 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Remove unused front app.
 
 
 0.5.17 (2019-04-26)

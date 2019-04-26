@@ -20,7 +20,7 @@ A [City of LA MDS Specification](https://github.com/CityOfLosAngeles/mobility-da
 ### Non-goals
 
 * High-performance: we favor developer-friendliness over performance (this software being stateless, scaling is trivial anyway. Just the database needs to be correctly dimensioned)
-* Full-featured UI: we provide an UI with required features, but this remains an API-first software
+* UI: we provide Django admin and swagger, but this remains an API-first software
 * Data-analysis: analysis should be done by other apps consuming the consumer API of this app (the API must be designed to allow data consumption by third-party software)
 
 ## Tech & requirements
@@ -45,10 +45,6 @@ A sample environment configuration is provided in `.env.example`
 
 Request authentication is done through JWT bearer token as specified in [MDS](https://github.com/CityOfLosAngeles/mobility-data-specification/tree/dev/agency#authorization)
 JWT secret key or public key should be given through environment configuration `MDS_AUTH_SECRET_KEY` or `MDS_AUTH_PUBLIC_KEY`
-
-### Frontend
-
-See dedicated README in [front/README.md](https://github.com/Polyconseil/django-mds/blob/master/front/README.md)
 
 ## Release
 

@@ -7,7 +7,6 @@ from unittest import mock
 from django.contrib.auth.models import User
 from django.test.utils import override_settings
 from django.urls import reverse
-from django.utils import timezone
 
 import jwt
 import pytest
@@ -65,13 +64,6 @@ def test_generate_jwt_with_rsa(mocked):
 
 
 @pytest.mark.django_db
-def test_long_lived_token_view_auth(client):
-    response = client.post(reverse("mds_prv_api:long_lived_token"))
-    assert response.status_code == 401
-    assert response["WWW-Authenticate"] == "Bearer"
-
-
-@pytest.mark.django_db
 @mock.patch(
     "mds.authent.generators._get_auth_mean",
     return_value=generators.AuthMean(key="my-secret", algorithm="HS256"),
@@ -122,7 +114,7 @@ def test_token_views_nominal_path(mocked, client):
 @override_settings(AUTH_MEANS=[SecretKeyJwtBaseAuthMean("my-secret")])
 def test_revocation_list(mocked, client):
     our_frontend = _create_application(
-        "Frontend", grant=models.Application.GRANT_PASSWORD, scopes=["prv_api"]
+        "Frontend", grant=models.Application.GRANT_PASSWORD, scopes=["agency_api"]
     )
     _create_user("toto", "titi")
 
@@ -136,14 +128,3 @@ def test_revocation_list(mocked, client):
     data = {"grant_type": "password", "username": "toto", "password": "titi"}
     response = client.post(reverse("authent:token"), data, **basic_auth_headers)
     assert response.status_code == 200
-    data = json.loads(response.content)
-    token = data["access_token"]
-
-    bearer_headers = {"HTTP_AUTHORIZATION": b"Bearer %s" % token.encode("utf-8")}
-    response = client.get("/prv/providers/", **bearer_headers)
-    assert response.status_code == 200
-
-    # revoke token
-    models.AccessToken.objects.update(revoked_after=timezone.now())
-    response = client.get("/prv/providers/", **bearer_headers)
-    assert response.status_code == 401
